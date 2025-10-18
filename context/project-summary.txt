@@ -1,0 +1,43 @@
+This is the high-level, definitive context summary for the **TestivAI Witness Adapter**. It defines the entire purpose and role of the NPM package in clear, modular terms, focusing on the concepts of **Agentic Tooling** and **Agnostic Architecture**.
+
+---
+
+## 👁️ High-Level Context: The `@testivai/witness` Adapter
+
+The **`@testivai/witness`** package is the foundational client-side tool (Sensor) for the TestivAI platform. Its primary role is to reliably **capture and verify immutable evidence** of the UI state, providing the necessary data for the powerful Python AI services to perform analysis.
+
+### 1. The Package's Core Role
+
+The `witness` library serves as the indispensable middle layer, decoupling the complexity of **browser automation** from **AI intelligence**.
+
+* **Identity:** It is a Node.js/TypeScript-based **Adapter/CLI** that is installed directly into the developer's project.
+* **Mission:** To provide the most reliable mechanism for **State-Based Visual Testing** and **Data Normalization**.
+* **Methodology:** It avoids assertions during test execution, making functional tests pass reliably while pushing the visual validation to a secure, offline audit phase.
+
+### 2. The Three Pillars of Functionality
+
+The entire package is built around three distinct, mandatory CLI commands that drive the Developer Experience (DX):
+
+| Pillar | CLI Command | In-Test API | Purpose & Output |
+| :--- | :--- | :--- | :--- |
+| **I. Capture (The Sensor)** | Implicitly runs during `npx playwright test` | **`testivai.record('Name')`** | **Action:** Uses native Playwright API (`page.screenshot()`) to capture the UI state and save it as an image artifact (current evidence). |
+| **II. Verification (The Auditor)** | **`tsvai verify`** | N/A | **Action:** Reads the current evidence, runs the **Pixelmatch** comparison against the baseline, calculates the difference metric, and compiles the **TestivAI Insight Dashboard** (HTML report). |
+| **III. Baseline Management** | **`tsvai approve <name>`** | N/A | **Action:** Provides the final security gate. Overwrites the old baseline image with the newly verified image, committing the change to the repository. |
+
+### 3. Agnosticism and Data Contract
+
+The core architectural feature of the adapter is its ability to communicate seamlessly with the Python backend:
+
+* **Output Contract:** The custom TypeScript reporter generates the **Normalized JSON Schema**. This payload contains the full structural context (`DOM Snippet`), the visual anomaly (`Base64 Diff Image`), and metrics.
+* **AI Integration:** The reporter dispatches this JSON payload via HTTP to the Python **`TestivAI Core API`**. This makes the AI backend agnostic to whether the test originated from Playwright, Selenium, or another framework.
+
+### 4. Security & Deployment
+
+The package enforces a strict **Dual-Mode Reporting** strategy for security:
+
+| Environment | Mode | Access Policy |
+| :--- | :--- | :--- |
+| **Local** (`tsvai serve`) | **Dynamic/Actionable** | The Node.js server is running. The **"Approve Change"** button is **visible and functional**, allowing for local file system modification via API call. |
+| **CI Artifact** (GitHub Actions) | **Static/Read-Only** | The Node.js server is absent. The Dashboard's JavaScript **hides the "Approve" button**, making the report a secure, passive artifact for review only. |
+
+The adapter ensures that **TestivAI** never stores raw client PII data in the cloud, relying instead on the transient capture of structured metadata and the difference image. 

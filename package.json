@@ -1,0 +1,52 @@
+{
+  "name": "@testivai/witness",
+  "version": "1.0.0",
+  "description": "TestivAI Witness Adapter - Client-side tool for capturing and verifying UI state evidence",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "reporter.js",
+    "README.md"
+  ],
+  "bin": {
+    "tsvai": "./dist/cli.js",
+    "testivai": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "testivai",
+    "visual-testing",
+    "playwright",
+    "testing",
+    "ui-testing"
+  ],
+  "author": "budi",
+  "license": "MIT",
+  "dependencies": {
+    "@playwright/test": "^1.48.0",
+    "commander": "^12.1.0",
+    "fs-extra": "^11.2.0",
+    "pixelmatch": "^6.0.0",
+    "pngjs": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/jest": "^29.5.13",
+    "@types/node": "^22.7.5",
+    "@types/pixelmatch": "^5.2.6",
+    "@types/pngjs": "^6.0.5",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
