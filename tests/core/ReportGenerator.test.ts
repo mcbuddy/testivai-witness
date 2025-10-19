@@ -62,7 +62,7 @@ describe('ReportGenerator', () => {
       expect(html).toContain('2');
       expect(html).toContain('Passed');
       expect(html).toContain('1');
-      expect(html).toContain('Failed');
+      expect(html).toContain('Diff Detected');
     });
 
     it('should not show approve button for passed tests', () => {
@@ -175,8 +175,33 @@ describe('ReportGenerator', () => {
 
     it('should include filter functionality', () => {
       const summary: VerificationSummary = {
-        total: 0,
-        passed: 0,
+        total: 2,
+        passed: 1,
+        failed: 1,
+        new: 0,
+        missing: 0,
+        errors: 0,
+        results: [],
+        timestamp: new Date().toISOString(),
+      };
+
+      const html = generateHTMLReport(summary);
+
+      // Check for filter buttons (only non-zero)
+      expect(html).toContain('filter-btn');
+      expect(html).toContain('data-filter="all"');
+      expect(html).toContain('data-filter="failed"');
+      expect(html).toContain('data-filter="passed"');
+      // Should not contain zero-count filters
+      expect(html).not.toContain('data-filter="new"');
+      expect(html).not.toContain('data-filter="missing"');
+      expect(html).not.toContain('data-filter="error"');
+    });
+
+    it('should hide zero-value stats in summary', () => {
+      const summary: VerificationSummary = {
+        total: 1,
+        passed: 1,
         failed: 0,
         new: 0,
         missing: 0,
@@ -187,12 +212,15 @@ describe('ReportGenerator', () => {
 
       const html = generateHTMLReport(summary);
 
-      // Check for filter buttons
-      expect(html).toContain('filter-btn');
-      expect(html).toContain('data-filter="all"');
-      expect(html).toContain('data-filter="failed"');
-      expect(html).toContain('data-filter="new"');
-      expect(html).toContain('data-filter="passed"');
+      // Should show Total and Passed
+      expect(html).toContain('Total');
+      expect(html).toContain('Passed');
+      
+      // Should not show zero-value stats in summary
+      expect(html).not.toContain('<div class="label">Diff Detected</div>');
+      expect(html).not.toContain('<div class="label">New</div>');
+      expect(html).not.toContain('<div class="label">Missing</div>');
+      expect(html).not.toContain('<div class="label">Errors</div>');
     });
   });
 });

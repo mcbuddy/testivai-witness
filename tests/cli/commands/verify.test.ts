@@ -114,7 +114,7 @@ describe('verify command', () => {
     // Check summary output
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Total:   3'));
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Passed: 1'));
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Failed: 1'));
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Diff Detected: 1'));
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('New:    1'));
   });
 

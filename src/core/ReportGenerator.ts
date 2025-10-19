@@ -8,14 +8,22 @@ import { VerificationSummary, ComparisonResult } from './VRTProcessor';
 function generateStatusBadge(status: string): string {
   const colors: Record<string, string> = {
     passed: '#10b981',
-    failed: '#ef4444',
+    failed: '#f59e0b', // Same as missing (yellow/amber)
     new: '#3b82f6',
     missing: '#f59e0b',
     error: '#6b7280',
   };
 
+  const labels: Record<string, string> = {
+    passed: 'Passed',
+    failed: 'Diff Detected',
+    new: 'New',
+    missing: 'Missing',
+    error: 'Error',
+  };
+
   const color = colors[status] || colors.error;
-  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  const label = labels[status] || status.charAt(0).toUpperCase() + status.slice(1);
 
   return `<span class="status-badge status-${status}" style="background-color: ${color}">${label}</span>`;
 }
@@ -403,36 +411,46 @@ export function generateHTMLReport(summary: VerificationSummary): string {
           <div class="label">Total</div>
           <div class="value">${summary.total}</div>
         </div>
+        ${summary.passed > 0 ? `
         <div class="summary-card">
           <div class="label">Passed</div>
           <div class="value" style="color: #10b981">${summary.passed}</div>
         </div>
+        ` : ''}
+        ${summary.failed > 0 ? `
         <div class="summary-card">
-          <div class="label">Failed</div>
-          <div class="value" style="color: #ef4444">${summary.failed}</div>
+          <div class="label">Diff Detected</div>
+          <div class="value" style="color: #f59e0b">${summary.failed}</div>
         </div>
+        ` : ''}
+        ${summary.new > 0 ? `
         <div class="summary-card">
           <div class="label">New</div>
           <div class="value" style="color: #3b82f6">${summary.new}</div>
         </div>
+        ` : ''}
+        ${summary.missing > 0 ? `
         <div class="summary-card">
           <div class="label">Missing</div>
           <div class="value" style="color: #f59e0b">${summary.missing}</div>
         </div>
+        ` : ''}
+        ${summary.errors > 0 ? `
         <div class="summary-card">
           <div class="label">Errors</div>
           <div class="value" style="color: #6b7280">${summary.errors}</div>
         </div>
+        ` : ''}
       </div>
     </div>
 
     <div class="filters">
       <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="failed">Failed</button>
-      <button class="filter-btn" data-filter="new">New</button>
-      <button class="filter-btn" data-filter="passed">Passed</button>
-      <button class="filter-btn" data-filter="missing">Missing</button>
-      <button class="filter-btn" data-filter="error">Errors</button>
+      ${summary.failed > 0 ? '<button class="filter-btn" data-filter="failed">Diff Detected</button>' : ''}
+      ${summary.new > 0 ? '<button class="filter-btn" data-filter="new">New</button>' : ''}
+      ${summary.passed > 0 ? '<button class="filter-btn" data-filter="passed">Passed</button>' : ''}
+      ${summary.missing > 0 ? '<button class="filter-btn" data-filter="missing">Missing</button>' : ''}
+      ${summary.errors > 0 ? '<button class="filter-btn" data-filter="error">Errors</button>' : ''}
     </div>
 
     <div class="comparisons">

@@ -22,11 +22,11 @@ export async function verifyCommand(): Promise<void> {
     // Display summary
     console.log('\n📈 Verification Summary:');
     console.log(`   Total:   ${summary.total}`);
-    console.log(`   ✓ Passed: ${summary.passed}`);
-    console.log(`   ✗ Failed: ${summary.failed}`);
-    console.log(`   ➕ New:    ${summary.new}`);
-    console.log(`   ⚠️  Missing: ${summary.missing}`);
-    console.log(`   ❌ Errors: ${summary.errors}`);
+    if (summary.passed > 0) console.log(`   ✓ Passed: ${summary.passed}`);
+    if (summary.failed > 0) console.log(`   ⚠️  Diff Detected: ${summary.failed}`);
+    if (summary.new > 0) console.log(`   ➕ New:    ${summary.new}`);
+    if (summary.missing > 0) console.log(`   ⚠️  Missing: ${summary.missing}`);
+    if (summary.errors > 0) console.log(`   ❌ Errors: ${summary.errors}`);
 
     // Generate report
     console.log('\n📝 Generating dashboard report...');
@@ -52,7 +52,7 @@ export async function verifyCommand(): Promise<void> {
     }
 
     if (summary.failed > 0) {
-      console.log(`\n⚠️  ${summary.failed} screenshot(s) have visual differences.`);
+      console.log(`\n⚠️  ${summary.failed} screenshot(s) have visual differences detected.`);
       console.log('   Review the dashboard and approve changes if they are intentional.');
     }
 

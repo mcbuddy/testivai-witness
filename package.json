@@ -1,5 +1,5 @@
 {
-  "name": "@testivai/witness",
+  "name": "testivai-witness",
   "version": "1.0.0",
   "description": "TestivAI Witness Adapter - Client-side tool for capturing and verifying UI state evidence",
   "main": "dist/index.js",
