@@ -3,6 +3,8 @@
 import { Command } from 'commander';
 import { initCommand } from './commands/init';
 import { verifyCommand } from './commands/verify';
+import { serveCommand } from './commands/serve';
+import { approveCommand } from './commands/approve';
 
 const program = new Command();
 
@@ -51,9 +53,13 @@ program
   .command('serve')
   .description('Start local server for TestivAI Insight Dashboard')
   .option('-p, --port <port>', 'Port number for the server', '3000')
-  .action((options) => {
-    console.log(`🌐 Starting TestivAI Dashboard on port ${options.port}...`);
-    console.log('⚠️  Command not implemented yet');
+  .action(async (options) => {
+    try {
+      await serveCommand(options);
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    }
   });
 
 /**
@@ -61,11 +67,16 @@ program
  * Approves a specific visual change and updates the baseline
  */
 program
-  .command('approve <name>')
+  .command('approve [name]')
   .description('Approve visual changes and update baseline image')
-  .action((name: string) => {
-    console.log(`✅ Approving changes for: ${name}`);
-    console.log('⚠️  Command not implemented yet');
+  .option('--all', 'Approve all failed and new snapshots')
+  .action(async (name: string | undefined, options) => {
+    try {
+      await approveCommand(name || '', options);
+    } catch (error) {
+      console.error('Approval failed:', error);
+      process.exit(1);
+    }
   });
 
 program.parse(process.argv);

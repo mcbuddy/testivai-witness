@@ -83,9 +83,18 @@ function generateComparisonCard(result: ComparisonResult): string {
       data-baseline-path="${result.baselinePath || ''}"
       data-current-path="${result.currentPath || ''}"
       data-action="approve"
+      style="display: none;"
     >
       ✓ Approve Change
     </button>
+  ` : '';
+  
+  const readOnlyMessage = (result.status === 'failed' || result.status === 'new') ? `
+    <div class="read-only-message" style="display: none;">
+      <span class="read-only-icon">🔒</span>
+      <span class="read-only-text">View-only mode - Start local server to approve changes</span>
+      <code class="read-only-command">npx tsvai serve</code>
+    </div>
   ` : '';
 
   return `
@@ -99,7 +108,7 @@ function generateComparisonCard(result: ComparisonResult): string {
         </div>
       </div>
       ${imagesHTML}
-      ${approveButton ? `<div class="card-actions">${approveButton}</div>` : ''}
+      ${approveButton || readOnlyMessage ? `<div class="card-actions">${approveButton}${readOnlyMessage}</div>` : ''}
     </div>
   `;
 }
@@ -319,6 +328,41 @@ export function generateHTMLReport(summary: VerificationSummary): string {
       background: #059669;
     }
 
+    .approve-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .read-only-message {
+      padding: 0.75rem 1rem;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .read-only-icon {
+      font-size: 1rem;
+    }
+
+    .read-only-text {
+      flex: 1;
+    }
+
+    .read-only-command {
+      padding: 0.25rem 0.5rem;
+      background: #1f2937;
+      color: #10b981;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
     .warning-message {
       padding: 1rem 1.5rem;
       background: #fef3c7;
@@ -397,6 +441,61 @@ export function generateHTMLReport(summary: VerificationSummary): string {
   </div>
 
   <script>
+    // Security Gate: Check if local server is running
+    async function checkServerStatus() {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const response = await fetch('/api/status', {
+          method: 'GET',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          // Server is running - show approve buttons
+          const approveButtons = document.querySelectorAll('.approve-btn');
+          const readOnlyMessages = document.querySelectorAll('.read-only-message');
+          
+          approveButtons.forEach(btn => {
+            btn.style.display = 'inline-block';
+          });
+          
+          readOnlyMessages.forEach(msg => {
+            msg.style.display = 'none';
+          });
+          
+          console.log('✓ Local server detected - Approve buttons enabled');
+          return true;
+        } else {
+          throw new Error('Server not responding');
+        }
+      } catch (error) {
+        // Server not running - show read-only message
+        const approveButtons = document.querySelectorAll('.approve-btn');
+        const readOnlyMessages = document.querySelectorAll('.read-only-message');
+        
+        approveButtons.forEach(btn => {
+          btn.style.display = 'none';
+        });
+        
+        readOnlyMessages.forEach(msg => {
+          msg.style.display = 'flex';
+        });
+        
+        console.log('ℹ View-only mode - Start server with "npx tsvai serve" to approve changes');
+        return false;
+      }
+    }
+
+    // Run security check on page load
+    let isServerRunning = false;
+    checkServerStatus().then(result => {
+      isServerRunning = result;
+    });
+
     // Filter functionality
     const filterButtons = document.querySelectorAll('.filter-btn');
     const comparisonCards = document.querySelectorAll('.comparison-card');
@@ -421,15 +520,144 @@ export function generateHTMLReport(summary: VerificationSummary): string {
       });
     });
 
-    // Approve button placeholder (to be implemented later)
+    // Approve button functionality
     const approveButtons = document.querySelectorAll('.approve-btn');
     approveButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const name = btn.dataset.screenshotName;
-        alert(\`Approve functionality will be implemented in the next phase.\\nScreenshot: \${name}\`);
+        
+        // Disable button during request
+        btn.disabled = true;
+        btn.textContent = '⏳ Approving...';
+        
+        try {
+          const response = await fetch('/api/accept-baseline', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ snapshotName: name }),
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // Show success message
+            btn.textContent = '✓ Approved!';
+            btn.style.backgroundColor = '#10b981';
+            
+            // Show success notification
+            showNotification('Success', \`Baseline approved for: \${name}\`, 'success');
+            
+            // Reload page after 1 second
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          } else {
+            // Show error
+            btn.textContent = '✗ Failed';
+            btn.style.backgroundColor = '#ef4444';
+            showNotification('Error', result.message || 'Failed to approve baseline', 'error');
+            
+            // Re-enable button after 2 seconds
+            setTimeout(() => {
+              btn.disabled = false;
+              btn.textContent = '✓ Approve Change';
+              btn.style.backgroundColor = '#10b981';
+            }, 2000);
+          }
+        } catch (error) {
+          btn.textContent = '✗ Network Error';
+          btn.style.backgroundColor = '#ef4444';
+          showNotification('Error', 'Failed to connect to server', 'error');
+          
+          // Re-enable button after 2 seconds
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = '✓ Approve Change';
+            btn.style.backgroundColor = '#10b981';
+          }, 2000);
+        }
       });
     });
+
+    // Notification system
+    function showNotification(title, message, type) {
+      const notification = document.createElement('div');
+      notification.style.cssText = \`
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        background: \${type === 'success' ? '#10b981' : '#ef4444'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+      \`;
+      notification.innerHTML = \`
+        <div style="font-weight: 600; margin-bottom: 0.25rem;">\${title}</div>
+        <div style="font-size: 0.875rem;">\${message}</div>
+      \`;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Auto-refresh every 10 seconds (only if server is running)
+    let autoRefreshInterval = null;
+    
+    checkServerStatus().then(serverRunning => {
+      if (serverRunning) {
+        autoRefreshInterval = setInterval(() => {
+          console.log('Auto-refreshing dashboard...');
+          window.location.reload();
+        }, 10000);
+      }
+    });
+
+    // Clear interval when page is hidden (user switched tabs)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (autoRefreshInterval) {
+          clearInterval(autoRefreshInterval);
+        }
+      } else if (isServerRunning) {
+        autoRefreshInterval = setInterval(() => {
+          window.location.reload();
+        }, 10000);
+      }
+    });
   </script>
+
+  <style>
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+  </style>
 </body>
 </html>`;
 }

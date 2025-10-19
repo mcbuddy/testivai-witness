@@ -356,6 +356,150 @@
 
 ---
 
+### ✅ Prompt Set 3.2: Local Server and tsvai approve
+
+**Completed on:** 2025-10-18
+
+#### P3.2.1 - Local Server Implementation
+- ✅ Created `src/cli/commands/serve.ts`:
+  - Uses native Node.js `http` module (zero dependencies)
+  - Serves static files from `.testivai/reports/`
+  - Auto-finds available port (starts at 3000, tries 3001, 3002, etc.)
+  - Serves `index.html` and all assets (images, CSS, JS)
+  - Path security validation (prevents directory traversal)
+  - Graceful shutdown on Ctrl+C
+  - Beautiful console output with server info
+
+#### P3.2.2 - POST /api/accept-baseline Endpoint
+- ✅ Implemented secure API route in serve command:
+  - Accepts JSON body with `snapshotName`
+  - Validates request structure
+  - Calls shared approval service
+  - Returns JSON response with success/error
+  - Logs approval actions to console
+  - Handles permission and disk space errors gracefully
+
+#### P3.2.3 - CLI Approval Utility
+- ✅ Created `src/cli/commands/approve.ts`:
+  - Single snapshot approval: `tsvai approve <name>`
+  - Bulk approval: `tsvai approve --all`
+  - Confirmation prompt for `--all` (user must type 'y')
+  - Displays summary of approved/failed snapshots
+  - Uses shared approval service (DRY principle)
+  - Helpful error messages for common issues
+
+#### Shared Approval Service
+- ✅ Created `src/core/ApprovalService.ts`:
+  - `approveBaseline()` - Copy current to baseline
+  - Automatically deletes diff images
+  - Creates baseline directory if needed
+  - Handles permission errors (EACCES)
+  - Handles disk space errors (ENOSPC)
+  - `getApprovableSnapshots()` - List all current screenshots
+  - `approveMultipleBaselines()` - Batch approval
+  - Used by both API endpoint and CLI command
+
+#### Dashboard Enhancements
+- ✅ Updated `src/core/ReportGenerator.ts`:
+  - Approve button functionality with fetch API
+  - Loading states (⏳ Approving...)
+  - Success/error notifications (slide-in animations)
+  - Auto-refresh every 10 seconds
+  - Pauses refresh when tab is hidden (saves resources)
+  - Reloads page after successful approval
+  - Beautiful notification system with animations
+
+#### Additional Implementation Details
+- ✅ Updated `src/cli/index.ts` to integrate serve and approve commands
+- ✅ Port fallback logic (3000 → 3001 → 3002...)
+- ✅ MIME type handling for static files
+- ✅ Security: Path validation to prevent directory traversal
+- ✅ Auto-refresh respects browser visibility API
+- ✅ Confirmation prompts using readline module
+
+#### Test Coverage
+- ✅ Created `tests/core/ApprovalService.test.ts` (10 tests):
+  - Single baseline approval
+  - Diff image deletion
+  - Missing file handling
+  - Permission error handling
+  - Directory creation
+  - Multiple snapshot approval
+  - Mixed success/failure scenarios
+- ✅ Created `tests/cli/commands/approve.test.ts` (6 tests):
+  - Single snapshot approval via CLI
+  - Diff deletion
+  - Missing snapshot handling
+  - --all flag functionality
+  - Confirmation prompts
+  - Empty approval list handling
+
+---
+
+### ✅ Prompt Set 3.3: Dashboard JS (Security Gate)
+
+**Completed on:** 2025-10-18
+
+#### P3.3.1 - Health Check Endpoint
+- ✅ Added `GET /api/status` endpoint to `src/cli/commands/serve.ts`:
+  - Returns simple `{ "status": "ok" }` JSON response
+  - 200 OK status code
+  - Used by dashboard to detect if server is running
+
+#### P3.3.2 - Security Check Logic
+- ✅ Implemented `checkServerStatus()` function in dashboard:
+  - Makes fetch request to `/api/status` on page load
+  - 5-second timeout using AbortController
+  - **If server responds (200 OK)**:
+    - Shows approve buttons (`display: inline-block`)
+    - Hides read-only messages
+    - Enables auto-refresh every 10 seconds
+    - Logs success to console
+  - **If server fails (timeout/error)**:
+    - Hides approve buttons (`display: none`)
+    - Shows read-only message with instructions
+    - Disables auto-refresh
+    - Logs view-only mode to console
+  - Ensures CI artifacts are read-only by default
+
+#### P3.3.3 - Approve Button Handler
+- ✅ Already implemented in previous prompt set:
+  - onClick sends POST to `/api/accept-baseline`
+  - Includes `snapshotName` in request body
+  - Shows loading state (⏳ Approving...)
+  - Displays success notification
+  - Reloads page after 1 second
+  - Handles errors gracefully
+
+#### Security Features
+- ✅ **Buttons hidden by default** - Secure by design
+- ✅ **Server detection required** - No approval without local server
+- ✅ **Read-only mode message** - Clear instructions for users
+- ✅ **5-second timeout** - Fast enough to not delay page load
+- ✅ **Console logging** - Helpful debugging information
+- ✅ **CI-safe** - Artifacts opened directly are read-only
+
+#### UI Enhancements
+- ✅ Read-only message styling:
+  - Lock icon (🔒)
+  - Gray background with border
+  - Helpful text: "View-only mode - Start local server to approve changes"
+  - Command snippet: `npx tsvai serve` in monospace
+- ✅ Disabled button state styling
+- ✅ Auto-refresh only when server is running
+- ✅ Respects browser visibility API
+
+#### Test Coverage
+- ✅ Created `tests/core/ReportGenerator.test.ts` (6 tests):
+  - Security gate presence in HTML
+  - Approve button visibility logic
+  - Read-only message inclusion
+  - Auto-refresh functionality
+  - Filter functionality
+  - Conditional rendering based on test status
+
+---
+
 ## Next Steps
 
 - Awaiting instructions for next prompt set...
