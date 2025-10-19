@@ -324,7 +324,7 @@ await testivai.record('header', {
 - **Git-based audit trail**: Baseline changes tracked in version control
 
 ### 📊 Rich Reporting
-- Percy.io-inspired dashboard design
+- Interactive dashboard design
 - Three-panel visual comparison
 - Interactive filters and search
 - Summary statistics

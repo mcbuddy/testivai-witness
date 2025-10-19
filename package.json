@@ -14,10 +14,13 @@
     "testivai": "./dist/cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run clean && tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build && npm test",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "dev": "tsc --watch"
   },
   "keywords": [
     "testivai",
@@ -28,6 +31,14 @@
   ],
   "author": "budi",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcbuddy/testivai-witness.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mcbuddy/testivai-witness/issues"
+  },
+  "homepage": "https://github.com/mcbuddy/testivai-witness#readme",
   "dependencies": {
     "@playwright/test": "^1.48.0",
     "commander": "^12.1.0",

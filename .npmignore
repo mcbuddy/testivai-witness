@@ -1,0 +1,24 @@
+# Source files
+src/
+tests/
+context/
+
+# Config files
+tsconfig.json
+jest.config.js
+.gitignore
+
+# Development
+node_modules/
+coverage/
+*.log
+.DS_Store
+
+# Test artifacts
+.testivai/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
