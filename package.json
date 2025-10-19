@@ -1,6 +1,6 @@
 {
   "name": "testivai-witness",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TestivAI Witness Adapter - Client-side tool for capturing and verifying UI state evidence",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
